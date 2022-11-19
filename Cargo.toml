@@ -1,0 +1,16 @@
+[package]
+name = "tiny-http-server"
+version = "0.1.0"
+edition = "2021"
+
+[profile.release]
+strip = true
+lto=true
+opt-level = 'z'
+codegen-units = 1
+panic = "abort"
+
+[dependencies]
+ascii = "1.1.0"
+config = "0.13.2"
+tiny_http = "0.12.0"
