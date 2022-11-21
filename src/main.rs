@@ -1,9 +1,9 @@
 
 use ascii::AsciiString;
-//use config::Config;
+use config::Config;
+use std::ffi::OsStr;
 use std::str::FromStr;
 use std::{env, fs};
-use std::collections::HashMap;
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use std::path::Path;
 use tiny_http::{Header, Response, Server, StatusCode};
@@ -35,29 +35,28 @@ fn main() {
             println!("{message}");
             return;
         }
-        let types=HashMap::new();
-//        let mut _settings = Config::builder().add_source(config::File::from(config)).build().expect(&message);
-//        let _test=_settings.get::<String>("dfg");
-        types
+        Config::builder().add_source(config::File::from(config)).build().expect(&message)
     } else {
-        let mut types = HashMap::new();
-        types.insert("css", "text/css");
-        types.insert("gif", "image/gif");
-        types.insert("htm", "text/html; charset=utf8");
-        types.insert("html", "text/html; charset=utf8");
-        types.insert("jpeg", "image/jpeg");
-        types.insert("jpg", "image/jpeg");
-        types.insert("js", "text/javascript");
-        types.insert("json", "application/json");
-        types.insert("pdf", "application/pdf");
-        types.insert("png", "image/png");
-        types.insert("svg", "image/svg+xml");
-        types.insert("txt", "text/plain; charset=utf8");
-        types
+        let default_settings=Config::builder()
+        .set_default("css", "text/css".to_string()).unwrap()
+        .set_default("gif", "image/gif".to_string()).unwrap()
+        .set_default("htm", "text/html; charset=utf8".to_string()).unwrap()
+        .set_default("html", "text/html; charset=utf8".to_string()).unwrap()
+        .set_default("jpeg", "image/jpeg".to_string()).unwrap()
+        .set_default("jpg", "image/jpeg".to_string()).unwrap()
+        .set_default("js", "text/javascript".to_string()).unwrap()
+        .set_default("json", "application/json".to_string()).unwrap()
+        .set_default("pdf", "application/pdf".to_string()).unwrap()
+        .set_default("png", "image/png".to_string()).unwrap()
+        .set_default("svg", "image/svg+xml".to_string()).unwrap()
+        .set_default("txt", "text/plain; charset=utf8".to_string()).unwrap().build().unwrap();
+        default_settings
     };
 
     let server = Server::http(SocketAddr::new(IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0)), port)).unwrap();
     println!("Server listening on port {port} and serving from {docroot:?}");
+
+    let default_content_type = String::from("application/unknown");
 
     loop {
         let mut rq = match server.recv() {
@@ -80,16 +79,14 @@ fn main() {
         let file = fs::File::open(&path);
 
         if file.is_ok() {
+            let content_type = types.get_string(match path.extension(){
+                Some(ext) => ext,
+                None => OsStr::new("text/plain; charset=utf8")
+            }.to_str().unwrap()).unwrap_or(default_content_type.clone());
             let response = Response::from_file(file.unwrap());
             let response = response.with_header(Header {
                 field: "Content-Type".parse().unwrap(),
-                value: AsciiString::from_str(match path.extension() {
-                    None => "text/plain",
-                    Some(ext) => match types.get(ext.to_str().unwrap()){
-                        Some(ty) => ty,
-                        None => "application/unknown",                        
-                    },
-                }).unwrap(),
+                value: AsciiString::from_str(&content_type).unwrap(),
             });
             println!("Responding with: {path:?}\n");
             let _ = rq.respond(response);
