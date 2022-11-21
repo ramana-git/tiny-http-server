@@ -1,11 +1,10 @@
-
 use ascii::AsciiString;
 use config::Config;
-use std::ffi::OsStr;
-use std::str::FromStr;
 use std::{env, fs};
+use std::ffi::OsStr;
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use std::path::Path;
+use std::str::FromStr;
 use tiny_http::{Header, Response, Server, StatusCode};
 
 fn main() {
