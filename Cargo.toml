@@ -12,5 +12,5 @@ panic = "abort"
 
 [dependencies]
 ascii = "1.1.0"
-config = "0.13.2"
+config = "0.13.3"
 tiny_http = "0.12.0"
